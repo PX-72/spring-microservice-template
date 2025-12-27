@@ -1,0 +1,9 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+management:
+  endpoint:
+    health:
+      show-details: always
