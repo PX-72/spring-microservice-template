@@ -16,7 +16,7 @@
   <modules>
     <module>domain</module>
     <module>adapters</module>
-    <module>app</module>
+    <module>runtime</module>
   </modules>
 
   <properties>

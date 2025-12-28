@@ -25,7 +25,7 @@ I use this as a base for real projects.
 spring-microservice-template
  - domain -> pure business logic (no Spring dependencies)
  - adapters -> persistence, external systems, implementations
- - app -> Spring Boot application (API, wiring, config)
+ - runtime -> Spring Boot application (API, wiring, config)
 
 
 This keeps business logic testable and prevents Spring from leaking everywhere.
@@ -79,19 +79,19 @@ It is intentionally boring in the right ways.
 
 ---
 
-Build the app
+Build the runtime
 ```
-./mvnw -pl app -am package
+./mvnw -pl runtime -am package
 ```
 
 Run locally (no DB yet)
 ```
-./mvnw -pl app spring-boot:run
+./mvnw -pl runtime spring-boot:run
 ```
 
 Enable JSON logging
 ```
-SPRING_PROFILES_ACTIVE=json ./mvnw -pl app spring-boot:run
+SPRING_PROFILES_ACTIVE=json ./mvnw -pl runtime spring-boot:run
 ```
 
 ---
@@ -130,7 +130,7 @@ Typical next steps for a real service:
 
 1. Add your domain model in domain 
 2. Add persistence or external clients in adapters 
-3. Expose endpoints in app 
+3. Expose endpoints in runtime 
 4. Introduce DB via profile (e.g. postgres)
 5. Add integration tests with Testcontainers 
 6. Add outbound HTTP client config (timeouts, retries, etc.)
