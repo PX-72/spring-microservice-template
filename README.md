@@ -29,27 +29,27 @@ This makes the service:
 #### How it maps to this project
 
 domain
--> core model + business rules
--> inbound ports (use cases)
--> outbound ports (interfaces)
+- core model + business rules
+- inbound ports (use cases)
+- outbound ports (interfaces)
 
-adapters
-in/
--> REST controllers
--> Kafka consumers
--> gRPC services
--> WebSocket handlers
--> MCP handlers
-out/
--> persistence (JPA, JDBC, etc.)
--> messaging producers
--> external service clients
--> caches
+adapters/in/
+- REST controllers
+- Kafka consumers
+- gRPC services
+- WebSocket handlers
+- MCP handlers
+
+adapters/out/
+- persistence (JPA, JDBC, etc.)
+- messaging producers
+- external service clients
+- caches
 
 runtime
--> Spring Boot entrypoint
--> wiring & configuration
--> selecting which adapters are active
+- Spring Boot entrypoint
+- wiring & configuration
+- selecting which adapters are active
 
 Inbound adapters translate external input into calls on **inbound ports**.  
 Outbound adapters implement **outbound ports** defined in the domain.
