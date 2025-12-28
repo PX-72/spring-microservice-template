@@ -13,6 +13,53 @@ I use this as a base for real projects.
 
 ---
 
+### Architecture style: Ports and Adapters (Hexagonal)
+
+This template follows the **Ports and Adapters** (also called **Hexagonal**) architecture.
+
+- The **core** of the system (domain + use cases) knows nothing about frameworks, databases, messaging systems, or transports.
+- Everything that touches the outside world is an **adapter**.
+- The runtime module wires the whole system together.
+
+This makes the service:
+- easier to test
+- easier to change infrastructure
+- safer to extend with new transports (REST, Kafka, gRPC, MCP, WebSockets, etc.)
+
+#### How it maps to this project
+
+domain
+-> core model + business rules
+-> inbound ports (use cases)
+-> outbound ports (interfaces)
+
+adapters
+in/
+-> REST controllers
+-> Kafka consumers
+-> gRPC services
+-> WebSocket handlers
+-> MCP handlers
+out/
+-> persistence (JPA, JDBC, etc.)
+-> messaging producers
+-> external service clients
+-> caches
+
+runtime
+-> Spring Boot entrypoint
+-> wiring & configuration
+-> selecting which adapters are active
+
+Inbound adapters translate external input into calls on **inbound ports**.  
+Outbound adapters implement **outbound ports** defined in the domain.
+
+The core never depends on adapters.  
+Adapters depend on the core.  
+The runtime composes everything.
+
+---
+
 ## What this template gives you
 
 ### Core stack
@@ -20,15 +67,7 @@ I use this as a base for real projects.
 - **Spring Boot 3.5**
 - **Maven multi-module project**
 
-### Architecture
-
-spring-microservice-template
- - domain -> pure business logic (no Spring dependencies)
- - adapters -> persistence, external systems, implementations
- - runtime -> Spring Boot application (API, wiring, config)
-
-
-This keeps business logic testable and prevents Spring from leaking everywhere.
+---
 
 ### Runtime features
 - REST API with validation
