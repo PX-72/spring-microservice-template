@@ -1,4 +1,4 @@
-package com.example.template.runtime;
+package com.example.template.adapters.in.rest;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.template.runtime.api.GreetingController;
 import com.example.template.domain.Greeting;
 import com.example.template.domain.GreetingUseCase;
 import java.util.UUID;

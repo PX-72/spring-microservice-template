@@ -72,6 +72,7 @@ The runtime composes everything.
 ### Runtime features
 - REST API with validation
 - Consistent error responses using **Problem Details**
+- Database migrations with **Flyway**
 - Actuator endpoints:
   - health / liveness / readiness
   - metrics
@@ -82,7 +83,7 @@ The runtime composes everything.
 
 ### Testing
 - **Unit tests** (fast, no DB required)
-- Ready for integration tests (can be added later with Testcontainers)
+- **Integration tests** with Testcontainers (real PostgreSQL)
 
 ### Build & packaging
 - Maven Wrapper (`./mvnw`)
@@ -108,7 +109,7 @@ It is intentionally boring in the right ways.
 
 ### Requirements
 - Java 21
-- Docker (optional, only needed if you enable DB)
+- Docker (for integration tests and local database)
 
 ### Build & run tests
 
@@ -163,15 +164,69 @@ Once running:
 /actuator/prometheus
 ```
 
+---
+
+Database Migrations
+
+This template uses **Flyway** for database schema management.
+
+Migrations live in:
+```
+runtime/src/main/resources/db/migration/
+```
+
+Naming convention:
+```
+V1__create_greetings_table.sql
+V2__add_created_at_column.sql
+V3__add_index_on_message.sql
+```
+
+On startup, Flyway automatically:
+1. Checks which migrations have already run
+2. Applies any new migrations in order
+3. Fails fast if something is wrong
+
+To add a schema change, create a new versioned SQL file. Never edit existing migrations that have been applied.
+
+---
+
+Integration Tests
+
+This template includes integration tests using **Testcontainers**.
+
+Run unit tests only:
+```bash
+./mvnw test
+```
+
+Run all tests including integration tests:
+```bash
+./mvnw verify
+```
+
+Integration tests:
+- Spin up a real PostgreSQL container
+- Run Flyway migrations
+- Test the full request flow
+- Are skipped automatically if Docker is unavailable
+
+Integration test files end with `*IT.java` and live in:
+```
+runtime/src/test/java/
+```
+
+---
+
 How to extend this
 
 Typical next steps for a real service:
 
-1. Add your domain model in domain 
-2. Add persistence or external clients in adapters 
-3. Expose endpoints in runtime 
-4. Introduce DB via profile (e.g. postgres)
-5. Add integration tests with Testcontainers 
+1. Add your domain model in domain
+2. Add persistence or external clients in adapters
+3. Expose endpoints in adapters/in/
+4. Add database migrations in runtime/src/main/resources/db/migration/
+5. Add more integration tests as needed
 6. Add outbound HTTP client config (timeouts, retries, etc.)
 
 Philosophy

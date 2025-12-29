@@ -1,4 +1,4 @@
-package com.example.template.runtime.api.error;
+package com.example.template.adapters.in.rest.error;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;

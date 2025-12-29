@@ -1,4 +1,4 @@
-package com.example.template.runtime.api;
+package com.example.template.adapters.in.rest;
 
 import java.util.UUID;
 
