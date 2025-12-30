@@ -9,28 +9,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import org.junit.jupiter.api.condition.EnabledIf;
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-//@EnabledIf("isDockerAvailable")
 class GreetingFlowIT {
 
-    /*static boolean isDockerAvailable() {
-        try {
-            return DockerClientFactory.instance().isDockerAvailable();
-        } catch (Exception e) {
-            return false;
-        }
-    }*/
-
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -44,7 +32,6 @@ class GreetingFlowIT {
 
     @Test
     void createGreetingReturnsCreatedWithPersistedData() {
-        System.out.println("RUNNING TESTCONTAINERS TEST....");
         var request = new CreateGreetingRequest("World");
 
         var response = restTemplate.postForEntity("/api/v1/greetings", request, GreetingResponse.class);
