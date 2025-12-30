@@ -1,6 +1,6 @@
 package com.example.template.adapters.in.rest;
 
-import com.example.template.domain.GreetingUseCase;
+import com.example.template.domain.services.GreetingService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,17 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class GreetingController {
   private static final Logger logger = LoggerFactory.getLogger(GreetingController.class);
 
-  private final GreetingUseCase greetingUseCase;
+  private final GreetingService greetingService;
 
-  public GreetingController(GreetingUseCase greetingUseCase) {
-    this.greetingUseCase = greetingUseCase;
+  public GreetingController(GreetingService greetingService) {
+    this.greetingService = greetingService;
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public GreetingResponse create(@Valid @RequestBody CreateGreetingRequest request) {
     logger.info("Creating greeting");
-    var greeting = this.greetingUseCase.createGreeting(request.name());
+    var greeting = this.greetingService.createGreeting(request.name());
     return new GreetingResponse(greeting.id(), greeting.message());
   }
 }

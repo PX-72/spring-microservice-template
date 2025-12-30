@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.template.domain.Greeting;
-import com.example.template.domain.GreetingUseCase;
+import com.example.template.domain.services.GreetingService;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ class GreetingControllerTest {
   private final MockMvc mockMvc;
 
   @MockitoBean
-  private GreetingUseCase greetingUseCase;
+  private GreetingService greetingService;
 
   @Autowired
   GreetingControllerTest(MockMvc mockMvc) {
@@ -31,7 +31,7 @@ class GreetingControllerTest {
   @Test
   void CreateReturnsCreated() throws Exception {
     var id = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(this.greetingUseCase.createGreeting(anyString()))
+    when(this.greetingService.createGreeting(anyString()))
             .thenReturn(new Greeting(id, "Hello, User!"));
 
     this.mockMvc.perform(post("/api/v1/greetings")
