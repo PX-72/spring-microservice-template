@@ -18,16 +18,16 @@ import org.junit.jupiter.api.condition.EnabledIf;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@EnabledIf("isDockerAvailable")
+//@EnabledIf("isDockerAvailable")
 class GreetingFlowIT {
 
-    static boolean isDockerAvailable() {
+    /*static boolean isDockerAvailable() {
         try {
             return DockerClientFactory.instance().isDockerAvailable();
         } catch (Exception e) {
             return false;
         }
-    }
+    }*/
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -44,6 +44,7 @@ class GreetingFlowIT {
 
     @Test
     void createGreetingReturnsCreatedWithPersistedData() {
+        System.out.println("RUNNING TESTCONTAINERS TEST....");
         var request = new CreateGreetingRequest("World");
 
         var response = restTemplate.postForEntity("/api/v1/greetings", request, GreetingResponse.class);
