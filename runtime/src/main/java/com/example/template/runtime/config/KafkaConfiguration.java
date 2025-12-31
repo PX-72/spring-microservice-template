@@ -44,7 +44,10 @@ public class KafkaConfiguration {
 
     @Bean
     public KafkaTemplate<String, GreetingCreatedEvent> kafkaTemplate() {
-        return new KafkaTemplate<>(greetingEventProducerFactory());
+        KafkaTemplate<String, GreetingCreatedEvent> template =
+                new KafkaTemplate<>(greetingEventProducerFactory());
+        template.setObservationEnabled(true);
+        return template;
     }
 
     @Bean
@@ -70,6 +73,7 @@ public class KafkaConfiguration {
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(greetingEventConsumerFactory());
         factory.setConcurrency(3);
+        factory.getContainerProperties().setObservationEnabled(true);
         return factory;
     }
 

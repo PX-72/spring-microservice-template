@@ -46,6 +46,9 @@ management:
       probes:
         enabled: true
       show-details: never
+  tracing:
+    sampling:
+      probability: 1.0
 
 logging:
   level:

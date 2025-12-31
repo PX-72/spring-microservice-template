@@ -37,8 +37,9 @@ public class GrpcGreetingService extends GreetingServiceGrpc.GreetingServiceImpl
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+            logger.info("gRPC createGreeting completed greetingId={}", greeting.id());
         } catch (Exception e) {
-            logger.error("Error creating greeting via gRPC", e);
+            logger.error("Error creating greeting via gRPC: {}", e.getMessage(), e);
             responseObserver.onError(
                     Status.INTERNAL
                             .withDescription("Failed to create greeting: " + e.getMessage())
@@ -63,7 +64,9 @@ public class GrpcGreetingService extends GreetingServiceGrpc.GreetingServiceImpl
                                 .build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
+                logger.info("gRPC getGreeting completed greetingId={}", greeting.id());
             } else {
+                logger.debug("gRPC getGreeting not found id={}", request.getId());
                 responseObserver.onError(
                         Status.NOT_FOUND
                                 .withDescription("Greeting not found with id: " + request.getId())

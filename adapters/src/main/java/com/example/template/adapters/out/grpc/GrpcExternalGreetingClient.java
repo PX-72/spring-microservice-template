@@ -32,19 +32,34 @@ public class GrpcExternalGreetingClient implements ExternalGreetingClient {
                     new Greeting(UUID.fromString(response.getId()), response.getMessage()));
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                logger.debug("External greeting not found id={}", id);
                 return Optional.empty();
             }
-            logger.error("gRPC call failed", e);
+            logger.error(
+                    "gRPC fetchGreeting failed id={} status={}",
+                    id,
+                    e.getStatus().getCode(),
+                    e);
             throw new RuntimeException("Failed to fetch greeting from external service", e);
         }
     }
 
     @Override
     public Greeting createRemoteGreeting(String name) {
-        logger.info("Creating greeting on external service for: {}", name);
-        var request = CreateGreetingRequest.newBuilder().setName(name).build();
-
-        var response = greetingStub.createGreeting(request);
-        return new Greeting(UUID.fromString(response.getId()), response.getMessage());
+        logger.info("Creating greeting on external service for name={}", name);
+        try {
+            var request = CreateGreetingRequest.newBuilder().setName(name).build();
+            var response = greetingStub.createGreeting(request);
+            var greeting = new Greeting(UUID.fromString(response.getId()), response.getMessage());
+            logger.info("gRPC createRemoteGreeting completed greetingId={}", greeting.id());
+            return greeting;
+        } catch (StatusRuntimeException e) {
+            logger.error(
+                    "gRPC createRemoteGreeting failed name={} status={}",
+                    name,
+                    e.getStatus().getCode(),
+                    e);
+            throw new RuntimeException("Failed to create greeting on external service", e);
+        }
     }
 }
