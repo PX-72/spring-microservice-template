@@ -51,11 +51,11 @@ runtime
 - wiring & configuration
 - selecting which adapters are active
 
-Inbound adapters translate external input into calls on **inbound ports**.  
+Inbound adapters translate external input into calls on **inbound ports**.
 Outbound adapters implement **outbound ports** defined in the domain.
 
-The core never depends on adapters.  
-Adapters depend on the core.  
+The core never depends on adapters.
+Adapters depend on the core.
 The runtime composes everything.
 
 ---
@@ -71,24 +71,110 @@ The runtime composes everything.
 
 ### Runtime features
 - REST API with validation
+- gRPC server and client
+- Kafka producer and consumer
+- Redis caching
 - Consistent error responses using **Problem Details**
 - Database migrations with **Flyway**
 - Actuator endpoints:
   - health / liveness / readiness
-  - metrics
+  - metrics / prometheus
 - Structured logging
   - readable logs locally
   - JSON logs via profile
-- Trace/log correlation ready (OpenTelemetry + W3C)
+- Trace/log correlation (OpenTelemetry + W3C)
+- Distributed tracing through Kafka and gRPC
 
 ### Testing
 - **Unit tests** (fast, no DB required)
-- **Integration tests** with Testcontainers (real PostgreSQL)
+- **Integration tests** with Testcontainers (PostgreSQL, Redis, Kafka)
 
 ### Build & packaging
 - Maven Wrapper (`./mvnw`)
 - Dockerfile for container builds
-- `compose.yaml` for local Postgres when needed
+- `compose.yaml` for local development (PostgreSQL, Redis, Kafka, Zookeeper)
+
+---
+
+## Infrastructure
+
+### Redis
+
+Used for caching. The `GreetingCache` port is implemented by `RedisGreetingCache`.
+
+Configuration in `application.yml`:
+```yaml
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+```
+
+### Kafka
+
+Used for event-driven messaging. The template includes:
+- `KafkaGreetingEventPublisher` - publishes `GreetingCreatedEvent` to `greeting-events` topic
+- `KafkaGreetingEventListener` - consumes events from the same topic
+
+Configuration in `application.yml`:
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: greeting-service-group
+```
+
+Trace context is automatically propagated through Kafka message headers (W3C Trace Context).
+
+### gRPC
+
+The template includes both server and client:
+- `GrpcGreetingService` - gRPC server exposing `CreateGreeting` and `GetGreeting` RPCs
+- `GrpcExternalGreetingClient` - gRPC client for calling external services
+
+Proto file: `adapters/src/main/proto/greeting.proto`
+
+Configuration in `application.yml`:
+```yaml
+grpc:
+  server:
+    port: ${GRPC_SERVER_PORT:9090}
+  client:
+    external-greeting-service:
+      address: static://${EXTERNAL_GRPC_HOST:localhost}:${EXTERNAL_GRPC_PORT:9091}
+```
+
+---
+
+## Observability
+
+### Metrics
+
+Available at `/actuator/prometheus`. Includes:
+
+| Component | Metrics |
+|-----------|---------|
+| Redis | `cache_greeting_hits_total`, `cache_greeting_misses_total`, `cache_greeting_get_seconds`, `cache_greeting_put_seconds` |
+| Kafka | `kafka_greeting_events_published_total`, `kafka_greeting_events_received_total`, `kafka_greeting_events_processed_total` |
+| gRPC | `grpc_server_requests_seconds` (by method and status) |
+
+### Tracing
+
+Configured with Micrometer + OpenTelemetry bridge. Trace context flows through:
+- HTTP requests (automatic)
+- Kafka messages (via headers)
+- gRPC calls (via metadata)
+
+Set the OTLP endpoint to export traces:
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+```
+
+### Logging
+
+All adapters log with `traceId` and `spanId` in MDC. Log pattern includes these fields automatically.
 
 ---
 
@@ -109,53 +195,53 @@ It is intentionally boring in the right ways.
 
 ### Requirements
 - Java 21
-- Docker (for integration tests and local database)
+- Docker (for integration tests and local infrastructure)
+
+### Start local infrastructure
+
+```bash
+docker compose up -d
+```
+
+This starts PostgreSQL, Redis, Kafka, and Zookeeper.
 
 ### Build & run tests
 
 ```bash
-./mvnw clean test
+./mvnw clean verify
 ```
 
----
+### Run the application
 
-Build the runtime
-```
-./mvnw -pl runtime -am package
-```
-
-Run locally (no DB yet)
-```
+```bash
 ./mvnw -pl runtime spring-boot:run
 ```
 
-Enable JSON logging
-```
+### Enable JSON logging
+
+```bash
 SPRING_PROFILES_ACTIVE=json ./mvnw -pl runtime spring-boot:run
 ```
 
 ---
 
-Logging
+## Endpoints
 
-Default: readable console logs
-JSON logs: activate profile json
+### REST
 
-JSON logs already include:
- - timestamp
-- log level
-- logger
-- message
-- MDC
-- traceId / spanId
+```
+POST /api/v1/greetings     - Create a greeting
+GET  /api/v1/greetings/{id} - Get a greeting by ID
+```
 
-This works well with any modern log platform.
+### gRPC
 
----
+Port 9090 (default). Services:
+- `GreetingService.CreateGreeting`
+- `GreetingService.GetGreeting`
 
-Actuator
+### Actuator
 
-Once running:
 ```
 /actuator/health
 /actuator/health/liveness
@@ -166,7 +252,7 @@ Once running:
 
 ---
 
-Database Migrations
+## Database Migrations
 
 This template uses **Flyway** for database schema management.
 
@@ -179,57 +265,43 @@ Naming convention:
 ```
 V1__create_greetings_table.sql
 V2__add_created_at_column.sql
-V3__add_index_on_message.sql
 ```
 
-On startup, Flyway automatically:
-1. Checks which migrations have already run
-2. Applies any new migrations in order
-3. Fails fast if something is wrong
-
-To add a schema change, create a new versioned SQL file. Never edit existing migrations that have been applied.
+On startup, Flyway automatically applies pending migrations.
 
 ---
 
-Integration Tests
-
-This template includes integration tests using **Testcontainers**.
-
-Run unit tests only:
-```bash
-./mvnw test
-```
+## Integration Tests
 
 Run all tests including integration tests:
 ```bash
 ./mvnw verify
 ```
 
-Integration tests:
-- Spin up a real PostgreSQL container
-- Run Flyway migrations
-- Test the full request flow
-- Are skipped automatically if Docker is unavailable
+Integration tests use Testcontainers to spin up:
+- PostgreSQL
+- Redis
+- Kafka
 
-Integration test files end with `*IT.java` and live in:
-```
-runtime/src/test/java/
-```
+Test files:
+- `GreetingFlowIT.java` - REST API flow
+- `RedisCacheIT.java` - Cache operations
+- `KafkaMessagingIT.java` - Event publishing and consumption
+- `GrpcGreetingIT.java` - gRPC server
 
 ---
 
-How to extend this
+## How to extend this
 
-Typical next steps for a real service:
+1. Add your domain model in `domain`
+2. Add persistence or external clients in `adapters/out`
+3. Expose endpoints in `adapters/in`
+4. Add database migrations in `runtime/src/main/resources/db/migration/`
+5. Add integration tests as needed
 
-1. Add your domain model in domain
-2. Add persistence or external clients in adapters
-3. Expose endpoints in adapters/in/
-4. Add database migrations in runtime/src/main/resources/db/migration/
-5. Add more integration tests as needed
-6. Add outbound HTTP client config (timeouts, retries, etc.)
+---
 
-Philosophy
+## Philosophy
 
 This template prefers:
 - explicit over clever
