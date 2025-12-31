@@ -14,7 +14,7 @@ Icon?
 *.iml
 *.iws
 *.ipr
-out/
+/out/
 
 # VS Code
 .vscode/
