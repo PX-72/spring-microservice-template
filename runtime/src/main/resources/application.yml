@@ -52,6 +52,14 @@ logging:
     root: INFO
     com.example.template: INFO
 
+grpc:
+  server:
+    port: ${GRPC_SERVER_PORT:9090}
+  client:
+    external-greeting-service:
+      address: static://${EXTERNAL_GRPC_HOST:localhost}:${EXTERNAL_GRPC_PORT:9091}
+      negotiationType: plaintext
+
 # OpenTelemetry exporter (optional).
 # If you run an OTLP collector, set OTEL_EXPORTER_OTLP_ENDPOINT, e.g. http://localhost:4317
 # Many environments will manage these via env vars instead of application.yml.

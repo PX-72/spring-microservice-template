@@ -32,6 +32,13 @@
     <maven.enforcer.plugin.version>3.5.0</maven.enforcer.plugin.version>
     <spotless.plugin.version>2.44.3</spotless.plugin.version>
     <testcontainers.version>2.0.3</testcontainers.version>
+
+    <!-- gRPC -->
+    <grpc.version>1.68.0</grpc.version>
+    <protobuf.version>4.28.2</protobuf.version>
+    <grpc-spring-boot.version>3.1.0.RELEASE</grpc-spring-boot.version>
+    <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+    <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -47,6 +54,13 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>${grpc.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
